@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Intelligence: Republican Presidential Nominee 2028</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --accent: #06b6d4;
+    --text: #e2e8f0; --muted: #94a3b8; --green: #22c55e;
+    --red: #ef4444; --amber: #f59e0b; --radius: 16px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif; background:var(--bg); color:var(--text); padding:48px 24px; line-height:1.6; }
+  .container { max-width:960px; margin:0 auto; }
+  .header { text-align:center; margin-bottom:48px; }
+  .header h1 { font-size:2.2rem; color:var(--text); margin-bottom:12px; letter-spacing:-0.02em; line-height:1.2; }
+  .category-badge { display:inline-block; padding:4px 16px; border-radius:20px; background:rgba(6,182,212,0.15); color:var(--accent); font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; }
+  .header-meta { color:var(--muted); font-size:0.9rem; }
+  .header-meta a { color:var(--accent); text-decoration:none; }
+  .section-title { font-size:1.4rem; color:var(--text); margin-bottom:20px; font-weight:700; display:flex; align-items:center; gap:10px; }
+  .section-title::before { content:''; display:inline-block; width:4px; height:24px; background:var(--accent); border-radius:2px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:48px; }
+  .stat-card { background:var(--surface); border-radius:var(--radius); padding:24px; text-align:center; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .stat-card.yes::before { background:var(--green); }
+  .stat-card.no::before { background:var(--red); }
+  .stat-card.volume::before { background:var(--accent); }
+  .stat-card.liquidity::before { background:var(--amber); }
+  .stat-value { font-size:2.4rem; font-weight:800; line-height:1; }
+  .stat-label { font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:6px; }
+  .stat-change { font-size:0.8rem; margin-top:4px; }
+  .change-up { color:var(--green); } .change-down { color:var(--red); }
+
+  /* Candidate table */
+  .candidates-table { background:var(--surface); border-radius:var(--radius); overflow:hidden; margin-bottom:16px; }
+  .candidates-header { display:grid; grid-template-columns:180px 1fr 80px; gap:12px; padding:12px 20px; font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid rgba(148,163,184,0.1); }
+  .candidate-row { display:grid; grid-template-columns:180px 1fr 80px; gap:12px; padding:14px 20px; align-items:center; border-bottom:1px solid rgba(148,163,184,0.05); }
+  .candidate-row.leader { background:rgba(6,182,212,0.06); border-left:3px solid var(--accent); }
+  .cand-name { font-weight:600; font-size:0.95rem; }
+  .cand-bars { flex:1; display:flex; flex-direction:column; gap:4px; }
+  .cand-bar-row { display:flex; align-items:center; gap:8px; }
+  .cand-bar-label { font-size:0.7rem; color:var(--muted); width:42px; text-align:right; }
+  .cand-bar-track { flex:1; height:18px; background:rgba(148,163,184,0.08); border-radius:4px; overflow:visible; position:relative; }
+  .cand-bar-fill { height:100%; border-radius:4px; display:flex; align-items:center; padding-left:8px; font-size:0.75rem; font-weight:600; color:white; min-width:36px; overflow:visible; white-space:nowrap; }
+  .cand-gap { font-size:0.85rem; font-weight:700; min-width:48px; text-align:center; }
+  .cand-bar-col { display:flex; align-items:center; gap:12px; }
+  .cand-vol-col { font-size:0.85rem; color:var(--muted); text-align:right; font-weight:500; }
+
+  /* Sentiment gap */
+  .gap-container { margin-bottom:48px; }
+  .gap-chart { background:var(--surface); border-radius:var(--radius); padding:28px 32px; margin-bottom:16px; }
+  .gap-row { display:flex; align-items:center; gap:16px; margin-bottom:18px; }
+  .gap-row:last-child { margin-bottom:0; }
+  .gap-row-label { width:60px; font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:700; flex-shrink:0; }
+  .gap-track { flex:1; height:36px; background:var(--bg); border-radius:8px; position:relative; overflow:visible; }
+  .gap-fill { height:100%; border-radius:8px; display:flex; align-items:center; justify-content:flex-end; padding-right:12px; font-weight:800; font-size:1rem; color:#fff; }
+  .gap-marker { position:absolute; top:-6px; bottom:-6px; width:2px; border-left:2px dashed rgba(148,163,184,0.4); z-index:2; }
+  .gap-zone { position:absolute; top:0; bottom:0; border-radius:0 8px 8px 0; background:rgba(245,158,11,0.12); border-right:2px solid var(--amber); }
+  .gap-callout { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius); padding:20px 24px; display:flex; align-items:flex-start; gap:20px; }
+  .gap-number { font-size:2rem; font-weight:800; color:var(--amber); white-space:nowrap; min-width:90px; flex-shrink:0; padding-top:2px; }
+  .gap-narrative { color:#cbd5e1; font-size:0.95rem; line-height:1.6; }
+
+  /* Posts banner */
+  .posts-banner { background:var(--surface); border-radius:var(--radius); padding:28px; display:flex; align-items:center; justify-content:center; gap:32px; margin-bottom:48px; flex-wrap:wrap; }
+  .posts-total { font-size:2.8rem; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .posts-label { color:var(--muted); font-size:0.9rem; }
+  .posts-badges { display:flex; gap:12px; }
+  .posts-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600; }
+  .posts-badge.twitter { background:rgba(29,155,240,0.15); color:#1d9bf0; }
+  .posts-badge.reddit { background:rgba(255,69,0,0.15); color:#ff4500; }
+  .posts-badge.instagram { background:rgba(225,48,108,0.15); color:#e1306c; }
+
+  /* Voice cards */
+  .voices-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:48px; }
+  .voices-column h3 { font-size:1rem; font-weight:700; margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid; }
+  .voices-column.yes h3 { color:var(--green); border-color:var(--green); }
+  .voices-column.no h3 { color:var(--red); border-color:var(--red); }
+  .voice-card { background:var(--surface); border-radius:var(--radius); padding:20px; margin-bottom:12px; }
+  .voice-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .voice-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:800; color:var(--bg); }
+  .voice-name { font-weight:700; font-size:0.95rem; }
+  .voice-handle { color:var(--accent); font-size:0.8rem; }
+  .voice-meta { color:var(--muted); font-size:0.75rem; }
+  .voice-quote { padding:10px 14px; background:var(--bg); border-radius:10px; font-style:italic; color:#cbd5e1; font-size:0.85rem; line-height:1.5; border-left:2px solid var(--accent); }
+
+  /* Catalysts */
+  .catalysts { display:flex; flex-direction:column; gap:14px; margin-bottom:48px; }
+  .catalyst-card { background:var(--surface); border-radius:var(--radius); padding:20px 24px; display:flex; align-items:center; gap:16px; border-left:4px solid var(--accent); }
+  .catalyst-type { display:inline-block; padding:3px 10px; border-radius:8px; font-size:0.7rem; font-weight:700; letter-spacing:0.06em; white-space:nowrap; }
+  .catalyst-body { flex:1; }
+  .catalyst-desc { font-size:0.95rem; font-weight:600; margin-bottom:4px; }
+  .catalyst-meta { font-size:0.8rem; color:var(--muted); }
+
+  /* Risk callout */
+  .risk-callout { background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.03)); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius); padding:28px; margin-bottom:48px; position:relative; overflow:hidden; }
+  .risk-callout::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--amber); }
+  .risk-label { color:var(--amber); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:10px; }
+  .risk-text { font-size:1.1rem; color:var(--text); line-height:1.6; }
+
+  footer { text-align:center; color:#475569; font-size:0.8rem; margin-top:40px; padding-top:20px; border-top:1px solid rgba(148,163,184,0.1); }
+  footer a { color:var(--accent); text-decoration:none; }
+  .disclaimer { margin-top:12px; font-size:0.72rem; color:#334155; max-width:600px; margin-left:auto; margin-right:auto; }
+
+  @media (max-width:768px) {
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .voices-columns { grid-template-columns:1fr; }
+    .candidates-header, .candidate-row { grid-template-columns:120px 1fr 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="category-badge">Politics</div>
+    <h1>Republican Presidential Nominee 2028</h1>
+    <div class="header-meta">
+      <a href="https://polymarket.com/event/republican-presidential-nominee-2028" target="_blank">View on Polymarket &#8599;</a>
+      &middot; Snapshot: Mar 20, 2026
+    </div>
+  </div>
+
+  <!-- Market Snapshot -->
+  <div class="section-title">Market Snapshot</div>
+  <div class="stats-grid">
+    <div class="stat-card yes">
+      <div class="stat-value" style="color:var(--green)">37%</div>
+      <div class="stat-label">Leader (Vance)</div>
+      <div class="stat-change change-down">-2.6% 7d</div>
+    </div>
+    <div class="stat-card no">
+      <div class="stat-value" style="color:var(--accent)">28%</div>
+      <div class="stat-label">Runner-up (Rubio)</div>
+      <div class="stat-change change-up">+0.4% 7d</div>
+    </div>
+    <div class="stat-card volume">
+      <div class="stat-value" style="color:var(--accent)">$440M</div>
+      <div class="stat-label">Total Volume</div>
+    </div>
+    <div class="stat-card liquidity">
+      <div class="stat-value" style="color:var(--amber)">15</div>
+      <div class="stat-label">Candidates</div>
+    </div>
+  </div>
+
+  <!-- Candidate Field -->
+  <div class="section-title">Candidate Field</div>
+  <div class="candidates-table">
+    <div class="candidates-header">
+      <div>Candidate</div>
+      <div>Market vs Social</div>
+      <div>Volume</div>
+    </div>
+
+    <!-- 1. J.D. Vance (leader by market odds) -->
+    <div class="candidate-row leader">
+      <div><div class="cand-name">J.D. Vance</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:53%;background:var(--accent)">37%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:41%;background:var(--red)">29%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-8pt</div>
+      </div>
+      <div class="cand-vol-col">$6.2M</div>
+    </div>
+
+    <!-- 2. Marco Rubio -->
+    <div class="candidate-row">
+      <div><div class="cand-name">Marco Rubio</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:40%;background:var(--accent)">28%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:90%;background:var(--green)">63%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--green)">+35pt</div>
+      </div>
+      <div class="cand-vol-col">$6.2M</div>
+    </div>
+
+    <!-- 3. Ron DeSantis -->
+    <div class="candidate-row">
+      <div><div class="cand-name">Ron DeSantis</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:4.4%;background:var(--accent);min-width:36px">3%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:8.6%;background:var(--green);min-width:36px">6%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--green)">+3pt</div>
+      </div>
+      <div class="cand-vol-col">$7.2M</div>
+    </div>
+
+    <!-- 4. Donald Trump -->
+    <div class="candidate-row">
+      <div><div class="cand-name">Donald Trump</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:2.5%;background:var(--accent);min-width:36px">2%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:4%;background:var(--green);min-width:36px">1%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-1pt</div>
+      </div>
+      <div class="cand-vol-col">$5.9M</div>
+    </div>
+
+    <!-- 5. Donald Trump Jr. -->
+    <div class="candidate-row">
+      <div><div class="cand-name">Donald Trump Jr.</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:2.2%;background:var(--accent);min-width:36px">2%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:4%;background:var(--muted);min-width:36px">0%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-2pt</div>
+      </div>
+      <div class="cand-vol-col">$4.7M</div>
+    </div>
+
+    <!-- 6. Glenn Youngkin -->
+    <div class="candidate-row">
+      <div><div class="cand-name">Glenn Youngkin</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:1.9%;background:var(--accent);min-width:36px">1%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:4%;background:var(--muted);min-width:36px">0%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-1pt</div>
+      </div>
+      <div class="cand-vol-col">$5.0M</div>
+    </div>
+  </div>
+
+  <!-- Sentiment Gap -->
+  <div class="section-title">Sentiment Gap</div>
+  <div class="gap-container">
+    <div class="gap-chart">
+      <div class="gap-row">
+        <div class="gap-row-label">Market</div>
+        <div class="gap-track">
+          <div class="gap-fill" style="width:37%;background:var(--accent)">37%</div>
+        </div>
+      </div>
+      <div class="gap-row">
+        <div class="gap-row-label">Social</div>
+        <div class="gap-track">
+          <div class="gap-fill" style="width:29%;background:var(--red)">29%</div>
+          <div class="gap-marker" style="left:37%"></div>
+          <div class="gap-zone" style="left:29%;width:8%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="gap-callout">
+      <div class="gap-number">-8pt</div>
+      <div>
+        <div class="gap-narrative">Social buzz on J.D. Vance runs 8 points below his market odds -- the crowd is less confident than bettors. Meanwhile, Marco Rubio dominates online discussion at 63% social share vs just 28% market odds, suggesting a massive grassroots enthusiasm gap that the prediction market has not yet priced in. The "Rubio 2028" movement is driven by his performance as Secretary of State and contrast with Vance's perceived Tucker Carlson association.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Posts Analyzed -->
+  <div class="section-title">Posts Analyzed</div>
+  <div class="posts-banner">
+    <div>
+      <div class="posts-total">375</div>
+      <div class="posts-label">posts analyzed &middot; last 30 days</div>
+    </div>
+    <div class="posts-badges">
+      <span class="posts-badge twitter">&#120143; 374 tweets</span>
+      <span class="posts-badge reddit">R 1 post</span>
+      <span class="posts-badge instagram">&#128247; 0 posts</span>
+    </div>
+  </div>
+
+  <!-- Top Voices -->
+  <div class="section-title">Top Voices</div>
+  <div class="voices-columns">
+    <div class="voices-column yes">
+      <h3>Supporters</h3>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">C</div>
+          <div>
+            <div class="voice-name">CryptidPolitics</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @CryptidPolitics</div>
+            <div class="voice-meta">5,984 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Trump knows Rubio 2028 makes sense: 'I became a diplomat for the first time. You know who taught me that, Marco Rubio... Marco has been fantastic. Marco, stand up, please. You have done a great job as Sec. of State.'"</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">J</div>
+          <div>
+            <div class="voice-name">JoeyMannarino</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @JoeyMannarino</div>
+            <div class="voice-meta">4,007 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"If you told me in 2016 that I'd be rooting for Rubio 2028 I'd have told you that you were on something. But, as far as I'm seeing, Rubio 2028 would crush anything the Democrats could possibly put against him."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">G</div>
+          <div>
+            <div class="voice-name">GuntherEagleman</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @GuntherEagleman</div>
+            <div class="voice-meta">3,849 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Rubio/Vance or Vance/Rubio 2028?"</div>
+      </div>
+    </div>
+
+    <div class="voices-column no">
+      <h3>Skeptics</h3>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">N</div>
+          <div>
+            <div class="voice-name">NextAI3n</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @NextAI3n</div>
+            <div class="voice-meta">483 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"NEVER VANCE 2028 - BLUE WAVE 2026"</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">A</div>
+          <div>
+            <div class="voice-name">AviFelman</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @AviFelman</div>
+            <div class="voice-meta">259 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"I continue to believe that Rubio 2028 is underpriced, he's up to 18% now. J.D Vance is clearly being sidelined. All of the major successes from the Trump presidency have been foreign policy, and Rubio is the face of that success. All the failures? Domestic."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">B</div>
+          <div>
+            <div class="voice-name">BorderBeliever</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @BorderBeliever</div>
+            <div class="voice-meta">146 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"No Vance 2028"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Catalysts -->
+  <div class="section-title">Catalysts</div>
+  <div class="catalysts">
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(29,155,240,0.2);color:#1d9bf0">TWEET</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">Trump praises Rubio: "I became a diplomat for the first time. You know who taught me that, Marco Rubio... He's done a great job as Sec. of State."</div>
+        <div class="catalyst-meta">Mar 4 &middot; 5,984 engagements</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(29,155,240,0.2);color:#1d9bf0">TWEET</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">After deploying Sec. Rubio, Trump reveals Cuba is NEXT -- "Pretty soon, we will either make a deal, or do WHATEVER we have to do!"</div>
+        <div class="catalyst-meta">Mar 16 &middot; 5,322 engagements</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(29,155,240,0.2);color:#1d9bf0">TWEET</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">"If you told me in 2016 that I'd be rooting for Rubio 2028 I'd have told you that you were on something. But Rubio 2028 would crush anything the Democrats could put against him."</div>
+        <div class="catalyst-meta">Mar 8 &middot; 4,007 engagements</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(29,155,240,0.2);color:#1d9bf0">TWEET</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">"Vance or Rubio, 2028?" -- viral poll sparking massive debate (1,347 replies) on whether Rubio should top the ticket over the presumed heir</div>
+        <div class="catalyst-meta">Mar 10 &middot; 3,849 engagements</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Risk/Opportunity -->
+  <div class="risk-callout">
+    <div class="risk-label">Risk / Opportunity Signal</div>
+    <div class="risk-text">Social buzz on J.D. Vance runs 8 points below his market odds -- the crowd is less confident than bettors. Meanwhile, Marco Rubio dominates online discussion at 63% social share vs just 28% market odds, a +35pt gap suggesting a massive grassroots enthusiasm that the prediction market has not yet priced in. The "Rubio 2028" movement is fueled by his widely praised performance as Secretary of State, particularly on Cuba and Iran diplomacy. Key risk for Vance: his association with Tucker Carlson is repeatedly cited as a dealbreaker by vocal MAGA supporters, many of whom are pivoting to Rubio. This social-market divergence represents a significant opportunity signal for Rubio backers.</div>
+  </div>
+
+  <footer>
+    Generated by <a href="https://xpoz.ai" target="_blank">XPOZ</a> &middot; Social Intelligence for Prediction Markets<br>
+    Mar 20, 2026 &middot; <a href="https://polymarket.com/event/republican-presidential-nominee-2028" target="_blank">https://polymarket.com/event/republican-presidential-nominee-2028</a>
+    <div class="disclaimer">This report is for informational purposes only and does not constitute financial advice.</div>
+  </footer>
+
+</div>
+</body>
+</html>

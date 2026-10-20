@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Intelligence: US recession by end of 2026?</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --accent: #06b6d4;
+    --text: #e2e8f0; --muted: #94a3b8; --green: #22c55e;
+    --red: #ef4444; --amber: #f59e0b; --radius: 16px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif; background:var(--bg); color:var(--text); padding:48px 24px; line-height:1.6; }
+  .container { max-width:960px; margin:0 auto; }
+  .header { text-align:center; margin-bottom:48px; }
+  .header h1 { font-size:2.2rem; color:var(--text); margin-bottom:12px; letter-spacing:-0.02em; line-height:1.2; }
+  .category-badge { display:inline-block; padding:4px 16px; border-radius:20px; background:rgba(6,182,212,0.15); color:var(--accent); font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; }
+  .header-meta { color:var(--muted); font-size:0.9rem; }
+  .header-meta a { color:var(--accent); text-decoration:none; }
+  .section-title { font-size:1.4rem; color:var(--text); margin-bottom:20px; font-weight:700; display:flex; align-items:center; gap:10px; }
+  .section-title::before { content:''; display:inline-block; width:4px; height:24px; background:var(--accent); border-radius:2px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:48px; }
+  .stat-card { background:var(--surface); border-radius:var(--radius); padding:24px; text-align:center; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .stat-card.yes::before { background:var(--green); }
+  .stat-card.no::before { background:var(--red); }
+  .stat-card.volume::before { background:var(--accent); }
+  .stat-card.liquidity::before { background:var(--amber); }
+  .stat-value { font-size:2.4rem; font-weight:800; line-height:1; }
+  .stat-label { font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:6px; }
+  .stat-change { font-size:0.8rem; margin-top:4px; }
+  .change-up { color:var(--green); } .change-down { color:var(--red); }
+
+  /* Sentiment gap */
+  .gap-container { margin-bottom:48px; }
+  .gap-chart { background:var(--surface); border-radius:var(--radius); padding:28px 32px; margin-bottom:16px; }
+  .gap-row { display:flex; align-items:center; gap:16px; margin-bottom:18px; }
+  .gap-row:last-child { margin-bottom:0; }
+  .gap-row-label { width:60px; font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:700; flex-shrink:0; }
+  .gap-track { flex:1; height:36px; background:var(--bg); border-radius:8px; position:relative; overflow:visible; }
+  .gap-fill { height:100%; border-radius:8px; display:flex; align-items:center; justify-content:flex-end; padding-right:12px; font-weight:800; font-size:1rem; color:#fff; }
+  .gap-marker { position:absolute; top:-6px; bottom:-6px; width:2px; border-left:2px dashed rgba(148,163,184,0.4); z-index:2; }
+  .gap-zone { position:absolute; top:0; bottom:0; border-radius:0 8px 8px 0; background:rgba(245,158,11,0.12); border-right:2px solid var(--amber); }
+  .gap-callout { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius); padding:20px 24px; display:flex; align-items:flex-start; gap:20px; }
+  .gap-number { font-size:2rem; font-weight:800; color:var(--amber); white-space:nowrap; min-width:90px; flex-shrink:0; padding-top:2px; }
+  .gap-narrative { color:#cbd5e1; font-size:0.95rem; line-height:1.6; }
+
+  /* Posts banner */
+  .posts-banner { background:var(--surface); border-radius:var(--radius); padding:28px; display:flex; align-items:center; justify-content:center; gap:32px; margin-bottom:48px; flex-wrap:wrap; }
+  .posts-total { font-size:2.8rem; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .posts-label { color:var(--muted); font-size:0.9rem; }
+  .posts-badges { display:flex; gap:12px; }
+  .posts-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600; }
+  .posts-badge.twitter { background:rgba(29,155,240,0.15); color:#1d9bf0; }
+  .posts-badge.reddit { background:rgba(255,69,0,0.15); color:#ff4500; }
+  .posts-badge.instagram { background:rgba(225,48,108,0.15); color:#e1306c; }
+
+  /* Voice cards */
+  .voices-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:48px; }
+  .voices-column h3 { font-size:1rem; font-weight:700; margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid; }
+  .voices-column.yes h3 { color:var(--green); border-color:var(--green); }
+  .voices-column.no h3 { color:var(--red); border-color:var(--red); }
+  .voice-card { background:var(--surface); border-radius:var(--radius); padding:20px; margin-bottom:12px; }
+  .voice-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .voice-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:800; color:var(--bg); }
+  .voice-name { font-weight:700; font-size:0.95rem; }
+  .voice-handle { color:var(--accent); font-size:0.8rem; }
+  .voice-meta { color:var(--muted); font-size:0.75rem; }
+  .voice-quote { padding:10px 14px; background:var(--bg); border-radius:10px; font-style:italic; color:#cbd5e1; font-size:0.85rem; line-height:1.5; border-left:2px solid var(--accent); }
+
+  /* Catalysts */
+  .catalysts { display:flex; flex-direction:column; gap:14px; margin-bottom:48px; }
+  .catalyst-card { background:var(--surface); border-radius:var(--radius); padding:20px 24px; display:flex; align-items:center; gap:16px; border-left:4px solid var(--accent); }
+  .catalyst-type { display:inline-block; padding:3px 10px; border-radius:8px; font-size:0.7rem; font-weight:700; letter-spacing:0.06em; white-space:nowrap; }
+  .catalyst-body { flex:1; }
+  .catalyst-desc { font-size:0.95rem; font-weight:600; margin-bottom:4px; }
+  .catalyst-meta { font-size:0.8rem; color:var(--muted); }
+
+  /* Risk callout */
+  .risk-callout { background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.03)); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius); padding:28px; margin-bottom:48px; position:relative; overflow:hidden; }
+  .risk-callout::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--amber); }
+  .risk-label { color:var(--amber); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:10px; }
+  .risk-text { font-size:1.1rem; color:var(--text); line-height:1.6; }
+
+  footer { text-align:center; color:#475569; font-size:0.8rem; margin-top:40px; padding-top:20px; border-top:1px solid rgba(148,163,184,0.1); }
+  footer a { color:var(--accent); text-decoration:none; }
+  .disclaimer { margin-top:12px; font-size:0.72rem; color:#334155; max-width:600px; margin-left:auto; margin-right:auto; }
+
+  @media (max-width:768px) {
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .voices-columns { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="category-badge">Economy</div>
+    <h1>US recession by end of 2026?</h1>
+    <div class="header-meta">
+      <a href="https://polymarket.com/event/us-recession-by-end-of-2026" target="_blank">View on Polymarket &#8599;</a>
+      &middot; Snapshot: March 20, 2026
+    </div>
+  </div>
+
+  <!-- Market Snapshot -->
+  <div class="section-title">Market Snapshot</div>
+  <div class="stats-grid">
+    <div class="stat-card yes">
+      <div class="stat-value" style="color:var(--green)">35%</div>
+      <div class="stat-label">YES Odds</div>
+      <div class="stat-change change-down">-0.5% today</div>
+    </div>
+    <div class="stat-card no">
+      <div class="stat-value" style="color:var(--red)">66%</div>
+      <div class="stat-label">NO Odds</div>
+    </div>
+    <div class="stat-card volume">
+      <div class="stat-value" style="color:var(--accent)">$704K</div>
+      <div class="stat-label">Volume</div>
+    </div>
+    <div class="stat-card liquidity">
+      <div class="stat-value" style="color:var(--amber)">$93K</div>
+      <div class="stat-label">Liquidity</div>
+    </div>
+  </div>
+
+  <!-- Sentiment Gap -->
+  <div class="section-title">Sentiment Gap</div>
+  <div class="gap-container">
+    <div class="gap-chart">
+      <div class="gap-row">
+        <div class="gap-row-label">Market</div>
+        <div class="gap-track">
+          <div class="gap-fill" style="width:35%;background:var(--accent)">35%</div>
+        </div>
+      </div>
+      <div class="gap-row">
+        <div class="gap-row-label">Social</div>
+        <div class="gap-track">
+          <div class="gap-fill" style="width:60%;background:var(--green)">60%</div>
+          <div class="gap-marker" style="left:35%"></div>
+          <div class="gap-zone" style="left:35%;width:25%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="gap-callout">
+      <div class="gap-number">+25pt</div>
+      <div>
+        <div class="gap-narrative">Social sentiment on a US recession runs 25 points above market odds &mdash; the crowd is far more convinced a recession is coming than bettors are willing to price in, driven largely by surging oil prices, the Iran-US conflict, and Strait of Hormuz disruption fears.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Posts Analyzed -->
+  <div class="section-title">Posts Analyzed</div>
+  <div class="posts-banner">
+    <div>
+      <div class="posts-total">116</div>
+      <div class="posts-label">posts analyzed &middot; last 7 days</div>
+    </div>
+    <div class="posts-badges">
+      <span class="posts-badge twitter">&#x1D54F; 108 tweets</span>
+      <span class="posts-badge reddit">R 8 posts</span>
+      <span class="posts-badge instagram">&#128247; 0 posts</span>
+    </div>
+  </div>
+
+  <!-- Top Voices -->
+  <div class="section-title">Top Voices</div>
+  <div class="voices-columns">
+    <div class="voices-column yes">
+      <h3>YES Camp</h3>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">T</div>
+          <div>
+            <div class="voice-name">Tazerface16</div>
+            <div class="voice-handle" style="color:var(--accent)">&#x1D54F; @Tazerface16</div>
+            <div class="voice-meta">2,124 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Short term price inelasticity. This is about to cause the worst economic recession that most of you have ever seen, or even remember."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">R</div>
+          <div>
+            <div class="voice-name">red_ball_express</div>
+            <div class="voice-handle" style="color:var(--accent)">R r/oil</div>
+            <div class="voice-meta">2,403 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Oil and other energy commodities from the Middle East are crucial to the global economy. The war is likely to cause a massive disruption in global oil supplies which could result in a global economic recession."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">M</div>
+          <div>
+            <div class="voice-name">mafco</div>
+            <div class="voice-handle" style="color:var(--accent)">R r/energy</div>
+            <div class="voice-meta">1,072 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"The grim choice facing the Trump administration: Economic or naval collapse? Trump is currently trapped between the specter of a global economic recession and a naval catastrophe."</div>
+      </div>
+
+    </div>
+    <div class="voices-column no">
+      <h3>NO Camp</h3>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">I</div>
+          <div>
+            <div class="voice-name">ISABELNET_SA</div>
+            <div class="voice-handle" style="color:var(--accent)">&#x1D54F; @ISABELNET_SA</div>
+            <div class="voice-meta">31 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Markets now price in just a 14% chance of a US recession over the next year, keeping recession fears modest and consistent with a moderate-risk backdrop."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">G</div>
+          <div>
+            <div class="voice-name">Gubloinvestor</div>
+            <div class="voice-handle" style="color:var(--accent)">&#x1D54F; @Gubloinvestor</div>
+            <div class="voice-meta">26 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Thinking that America will enter into recession 2026 is just delusional."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">B</div>
+          <div>
+            <div class="voice-name">BullIzist</div>
+            <div class="voice-handle" style="color:var(--accent)">&#x1D54F; @BullIzist</div>
+            <div class="voice-meta">1 reactions</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Goldman's recent hike to 25% US recession odds aligns with the February jobs miss and escalating energy costs from the Iran conflict. At current Brent ~$100, we're not there yet."</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Catalysts -->
+  <div class="section-title">Catalysts</div>
+  <div class="catalysts">
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(255,69,0,0.2);color:#ff4500">NEWS</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">Oil industry insider warns of worst energy crisis in history as Strait of Hormuz closure threatens 20% of global oil production</div>
+        <div class="catalyst-meta">Mar 6 &middot; 2,403 engagements</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(29,155,240,0.2);color:#1d9bf0">TWEET</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">Oil price inelasticity to cause worst economic recession most have ever seen &mdash; prices surging past $100/barrel</div>
+        <div class="catalyst-meta">Mar 17 &middot; 2,124 engagements</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(255,69,0,0.2);color:#ff4500">NEWS</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">Trump trapped between economic recession and naval collapse as Kuwait, Iraq, UAE shut off oil wells as storage overflows</div>
+        <div class="catalyst-meta">Mar 10 &middot; 1,072 engagements</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(29,155,240,0.2);color:#1d9bf0">TWEET</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">Moody's warns US recession odds hit 48.6%, highest since the 2020 pandemic, as oil surges 60% in under 3 weeks</div>
+        <div class="catalyst-meta">Mar 18 &middot; 643 engagements</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Risk/Opportunity -->
+  <div class="risk-callout">
+    <div class="risk-label">Risk / Opportunity Signal</div>
+    <div class="risk-text">Social sentiment on a US recession runs 25 points above market odds &mdash; the crowd is far more convinced a recession is coming than bettors are willing to price in. The dominant narrative centers on the Iran-US conflict, surging oil prices past $100/barrel, Strait of Hormuz disruption, and Moody's pushing recession probability near 50%. With Goldman raising odds to 25% and prediction markets at 31-35%, the gap suggests either the crowd is over-extrapolating war fears, or the market has not yet fully priced in the energy shock cascading through the global economy.</div>
+  </div>
+
+  <footer>
+    Generated by <a href="https://xpoz.ai" target="_blank">XPOZ</a> &middot; Social Intelligence for Prediction Markets<br>
+    March 20, 2026 &middot; <a href="https://polymarket.com/event/us-recession-by-end-of-2026" target="_blank">https://polymarket.com/event/us-recession-by-end-of-2026</a>
+    <div class="disclaimer">This report is for informational purposes only and does not constitute financial advice.</div>
+  </footer>
+
+</div>
+</body>
+</html>

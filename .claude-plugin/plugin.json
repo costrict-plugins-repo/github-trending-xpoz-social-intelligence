@@ -1,0 +1,27 @@
+{
+  "name": "xpoz-social-intelligence",
+  "description": "Real-time social media analysis from Twitter/X, Reddit, and Instagram - brand sentiment, competitive intelligence, influencer discovery, and prediction market analysis",
+  "version": "1.0.0",
+  "author": {
+    "name": "XPOZ",
+    "url": "https://xpoz.ai"
+  },
+  "homepage": "https://xpoz.ai",
+  "repository": "https://github.com/XPOZpublic/xpoz-claude-code-plugins",
+  "license": "MIT",
+  "keywords": [
+    "social-intelligence",
+    "brand",
+    "sentiment",
+    "social",
+    "twitter",
+    "instagram",
+    "influencers",
+    "analytics",
+    "competitive-intelligence",
+    "polymarket",
+    "prediction-markets",
+    "reddit",
+    "mcp"
+  ]
+}

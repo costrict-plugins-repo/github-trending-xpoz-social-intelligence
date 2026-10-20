@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Intelligence: 2026 FIFA World Cup Winner</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --accent: #06b6d4;
+    --text: #e2e8f0; --muted: #94a3b8; --green: #22c55e;
+    --red: #ef4444; --amber: #f59e0b; --radius: 16px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif; background:var(--bg); color:var(--text); padding:48px 24px; line-height:1.6; }
+  .container { max-width:960px; margin:0 auto; }
+  .header { text-align:center; margin-bottom:48px; }
+  .header h1 { font-size:2.2rem; color:var(--text); margin-bottom:12px; letter-spacing:-0.02em; line-height:1.2; }
+  .category-badge { display:inline-block; padding:4px 16px; border-radius:20px; background:rgba(6,182,212,0.15); color:var(--accent); font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; }
+  .header-meta { color:var(--muted); font-size:0.9rem; }
+  .header-meta a { color:var(--accent); text-decoration:none; }
+  .section-title { font-size:1.4rem; color:var(--text); margin-bottom:20px; font-weight:700; display:flex; align-items:center; gap:10px; }
+  .section-title::before { content:''; display:inline-block; width:4px; height:24px; background:var(--accent); border-radius:2px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:48px; }
+  .stat-card { background:var(--surface); border-radius:var(--radius); padding:24px; text-align:center; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .stat-card.yes::before { background:var(--green); }
+  .stat-card.no::before { background:var(--red); }
+  .stat-card.volume::before { background:var(--accent); }
+  .stat-card.liquidity::before { background:var(--amber); }
+  .stat-value { font-size:2.4rem; font-weight:800; line-height:1; }
+  .stat-label { font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:6px; }
+  .stat-change { font-size:0.8rem; margin-top:4px; }
+  .change-up { color:var(--green); } .change-down { color:var(--red); }
+
+  /* Candidate table */
+  .candidates-table { background:var(--surface); border-radius:var(--radius); overflow:hidden; margin-bottom:16px; }
+  .candidates-header { display:grid; grid-template-columns:180px 1fr 80px; gap:12px; padding:12px 20px; font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid rgba(148,163,184,0.1); }
+  .candidate-row { display:grid; grid-template-columns:180px 1fr 80px; gap:12px; padding:14px 20px; align-items:center; border-bottom:1px solid rgba(148,163,184,0.05); }
+  .candidate-row.leader { background:rgba(6,182,212,0.06); border-left:3px solid var(--accent); }
+  .cand-name { font-weight:600; font-size:0.95rem; }
+  .cand-bars { flex:1; display:flex; flex-direction:column; gap:4px; }
+  .cand-bar-row { display:flex; align-items:center; gap:8px; }
+  .cand-bar-label { font-size:0.7rem; color:var(--muted); width:42px; text-align:right; }
+  .cand-bar-track { flex:1; height:18px; background:rgba(148,163,184,0.08); border-radius:4px; overflow:visible; position:relative; }
+  .cand-bar-fill { height:100%; border-radius:4px; display:flex; align-items:center; padding-left:8px; font-size:0.75rem; font-weight:600; color:white; min-width:36px; overflow:visible; white-space:nowrap; }
+  .cand-gap { font-size:0.85rem; font-weight:700; min-width:48px; text-align:center; }
+  .cand-bar-col { display:flex; align-items:center; gap:12px; }
+  .cand-vol-col { font-size:0.85rem; color:var(--muted); text-align:right; font-weight:500; }
+
+  /* Sentiment gap */
+  .gap-container { margin-bottom:48px; }
+  .gap-chart { background:var(--surface); border-radius:var(--radius); padding:28px 32px; margin-bottom:16px; }
+  .gap-row { display:flex; align-items:center; gap:16px; margin-bottom:18px; }
+  .gap-row:last-child { margin-bottom:0; }
+  .gap-row-label { width:60px; font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:700; flex-shrink:0; }
+  .gap-track { flex:1; height:36px; background:var(--bg); border-radius:8px; position:relative; overflow:visible; }
+  .gap-fill { height:100%; border-radius:8px; display:flex; align-items:center; justify-content:flex-end; padding-right:12px; font-weight:800; font-size:1rem; color:#fff; }
+  .gap-marker { position:absolute; top:-6px; bottom:-6px; width:2px; border-left:2px dashed rgba(148,163,184,0.4); z-index:2; }
+  .gap-zone { position:absolute; top:0; bottom:0; border-radius:0 8px 8px 0; background:rgba(245,158,11,0.12); border-right:2px solid var(--amber); }
+  .gap-callout { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius); padding:20px 24px; display:flex; align-items:flex-start; gap:20px; }
+  .gap-number { font-size:2rem; font-weight:800; color:var(--amber); white-space:nowrap; min-width:90px; flex-shrink:0; padding-top:2px; }
+  .gap-narrative { color:#cbd5e1; font-size:0.95rem; line-height:1.6; }
+
+  /* Posts banner */
+  .posts-banner { background:var(--surface); border-radius:var(--radius); padding:28px; display:flex; align-items:center; justify-content:center; gap:32px; margin-bottom:48px; flex-wrap:wrap; }
+  .posts-total { font-size:2.8rem; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .posts-label { color:var(--muted); font-size:0.9rem; }
+  .posts-badges { display:flex; gap:12px; }
+  .posts-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600; }
+  .posts-badge.twitter { background:rgba(29,155,240,0.15); color:#1d9bf0; }
+  .posts-badge.reddit { background:rgba(255,69,0,0.15); color:#ff4500; }
+  .posts-badge.instagram { background:rgba(225,48,108,0.15); color:#e1306c; }
+
+  /* Voice cards */
+  .voices-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:48px; }
+  .voices-column h3 { font-size:1rem; font-weight:700; margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid; }
+  .voices-column.yes h3 { color:var(--green); border-color:var(--green); }
+  .voices-column.no h3 { color:var(--red); border-color:var(--red); }
+  .voice-card { background:var(--surface); border-radius:var(--radius); padding:20px; margin-bottom:12px; }
+  .voice-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .voice-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:800; color:var(--bg); }
+  .voice-name { font-weight:700; font-size:0.95rem; }
+  .voice-handle { color:var(--accent); font-size:0.8rem; }
+  .voice-meta { color:var(--muted); font-size:0.75rem; }
+  .voice-quote { padding:10px 14px; background:var(--bg); border-radius:10px; font-style:italic; color:#cbd5e1; font-size:0.85rem; line-height:1.5; border-left:2px solid var(--accent); }
+
+  /* Catalysts */
+  .catalysts { display:flex; flex-direction:column; gap:14px; margin-bottom:48px; }
+  .catalyst-card { background:var(--surface); border-radius:var(--radius); padding:20px 24px; display:flex; align-items:center; gap:16px; border-left:4px solid var(--accent); }
+  .catalyst-type { display:inline-block; padding:3px 10px; border-radius:8px; font-size:0.7rem; font-weight:700; letter-spacing:0.06em; white-space:nowrap; }
+  .catalyst-body { flex:1; }
+  .catalyst-desc { font-size:0.95rem; font-weight:600; margin-bottom:4px; }
+  .catalyst-meta { font-size:0.8rem; color:var(--muted); }
+
+  /* Risk callout */
+  .risk-callout { background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.03)); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius); padding:28px; margin-bottom:48px; position:relative; overflow:hidden; }
+  .risk-callout::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--amber); }
+  .risk-label { color:var(--amber); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:10px; }
+  .risk-text { font-size:1.1rem; color:var(--text); line-height:1.6; }
+
+  footer { text-align:center; color:#475569; font-size:0.8rem; margin-top:40px; padding-top:20px; border-top:1px solid rgba(148,163,184,0.1); }
+  footer a { color:var(--accent); text-decoration:none; }
+  .disclaimer { margin-top:12px; font-size:0.72rem; color:#334155; max-width:600px; margin-left:auto; margin-right:auto; }
+
+  @media (max-width:768px) {
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .voices-columns { grid-template-columns:1fr; }
+    .candidates-header, .candidate-row { grid-template-columns:120px 1fr 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="category-badge">Sports</div>
+    <h1>2026 FIFA World Cup Winner</h1>
+    <div class="header-meta">
+      <a href="https://polymarket.com/event/2026-fifa-world-cup-winner-595" target="_blank">View on Polymarket &#8599;</a>
+      &middot; Snapshot: Mar 20, 2026
+    </div>
+  </div>
+
+  <!-- Market Snapshot -->
+  <div class="section-title">Market Snapshot</div>
+  <div class="stats-grid">
+    <div class="stat-card yes">
+      <div class="stat-value" style="color:var(--green)">15.4%</div>
+      <div class="stat-label">Leader (Spain)</div>
+    </div>
+    <div class="stat-card no">
+      <div class="stat-value" style="color:var(--accent)">13.1%</div>
+      <div class="stat-label">Runner-up (England)</div>
+    </div>
+    <div class="stat-card volume">
+      <div class="stat-value" style="color:var(--accent)">$172M</div>
+      <div class="stat-label">Total Volume</div>
+    </div>
+    <div class="stat-card liquidity">
+      <div class="stat-value" style="color:var(--amber)">23</div>
+      <div class="stat-label">Active Teams</div>
+    </div>
+  </div>
+
+  <!-- Candidate Field -->
+  <div class="section-title">Candidate Field</div>
+  <div class="candidates-table">
+    <div class="candidates-header">
+      <div>Team</div>
+      <div>Market vs Social</div>
+      <div>Volume</div>
+    </div>
+
+    <!-- 1. Spain (leader) -->
+    <div class="candidate-row leader">
+      <div><div class="cand-name">Spain</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:90%;background:var(--accent)">15.4%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:14.6%;background:var(--red);min-width:36px">2.5%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-12.9pt</div>
+      </div>
+      <div class="cand-vol-col">$4.0M</div>
+    </div>
+
+    <!-- 2. England -->
+    <div class="candidate-row">
+      <div><div class="cand-name">England</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:76.6%;background:var(--accent)">13.1%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:27.5%;background:var(--red);min-width:36px">4.7%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-8.4pt</div>
+      </div>
+      <div class="cand-vol-col">$3.3M</div>
+    </div>
+
+    <!-- 3. Argentina -->
+    <div class="candidate-row">
+      <div><div class="cand-name">Argentina</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:64.3%;background:var(--accent)">11.0%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:46.2%;background:var(--red);min-width:36px">7.9%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-3.1pt</div>
+      </div>
+      <div class="cand-vol-col">$4.0M</div>
+    </div>
+
+    <!-- 4. France -->
+    <div class="candidate-row">
+      <div><div class="cand-name">France</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:61.9%;background:var(--accent)">10.6%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:20.5%;background:var(--red);min-width:36px">3.5%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-7.1pt</div>
+      </div>
+      <div class="cand-vol-col">$3.4M</div>
+    </div>
+
+    <!-- 5. Brazil -->
+    <div class="candidate-row">
+      <div><div class="cand-name">Brazil</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:50.9%;background:var(--accent)">8.7%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:53.2%;background:var(--green)">9.1%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--green)">+0.4pt</div>
+      </div>
+      <div class="cand-vol-col">$4.7M</div>
+    </div>
+
+    <!-- 6. Portugal -->
+    <div class="candidate-row">
+      <div><div class="cand-name">Portugal</div></div>
+      <div class="cand-bar-col">
+        <div class="cand-bars">
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Market</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:40.4%;background:var(--accent)">6.9%</div></div>
+          </div>
+          <div class="cand-bar-row">
+            <span class="cand-bar-label">Social</span>
+            <div class="cand-bar-track"><div class="cand-bar-fill" style="width:18.1%;background:var(--red);min-width:36px">3.1%</div></div>
+          </div>
+        </div>
+        <div class="cand-gap" style="color:var(--red)">-3.8pt</div>
+      </div>
+      <div class="cand-vol-col">$7.4M</div>
+    </div>
+  </div>
+
+  <!-- Sentiment Gap -->
+  <div class="section-title">Sentiment Gap</div>
+  <div class="gap-container">
+    <div class="gap-chart">
+      <div class="gap-row">
+        <div class="gap-row-label">Market</div>
+        <div class="gap-track">
+          <div class="gap-fill" style="width:90%;background:var(--accent)">15.4%</div>
+        </div>
+      </div>
+      <div class="gap-row">
+        <div class="gap-row-label">Social</div>
+        <div class="gap-track">
+          <div class="gap-fill" style="width:14.6%;background:var(--red);min-width:36px">2.5%</div>
+          <div class="gap-marker" style="left:90%"></div>
+          <div class="gap-zone" style="left:14.6%;width:75.4%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="gap-callout">
+      <div class="gap-number">-12.9pt</div>
+      <div>
+        <div class="gap-narrative">Spain leads the market at 15.4% but commands only 2.5% of social buzz -- a 12.9-point gap that makes it the most under-discussed front-runner. Meanwhile, host nations Mexico and USA dominate conversation at 14.5% and 11.6% social share respectively, far exceeding their tiny 1.1% and 1.6% market odds. Brazil is the only top-6 contender where social attention roughly matches market pricing. The social conversation skews heavily toward hosting logistics, kit reveals, and geopolitical disruptions rather than team form -- suggesting bettors and the public are focused on very different aspects of the tournament.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Posts Analyzed -->
+  <div class="section-title">Posts Analyzed</div>
+  <div class="posts-banner">
+    <div>
+      <div class="posts-total">537</div>
+      <div class="posts-label">posts analyzed &middot; Mar 13 &ndash; 20, 2026</div>
+    </div>
+    <div class="posts-badges">
+      <span class="posts-badge twitter">&#120143; 299 tweets</span>
+      <span class="posts-badge reddit">R 28 posts</span>
+      <span class="posts-badge instagram">&#128247; 210 posts</span>
+    </div>
+  </div>
+
+  <!-- Top Voices -->
+  <div class="section-title">Top Voices</div>
+  <div class="voices-columns">
+    <div class="voices-column yes">
+      <h3>Supporters</h3>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">M</div>
+          <div>
+            <div class="voice-name">metrotvgh</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @metrotvgh</div>
+            <div class="voice-meta">337 engagements &middot; Spain supporter</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Nico Williams Confident Spain Can Win 2026 FIFA World Cup"</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">I</div>
+          <div>
+            <div class="voice-name">IndiaToday</div>
+            <div class="voice-handle" style="color:var(--accent)">R u/IndiaToday</div>
+            <div class="voice-meta">40 engagements &middot; Multi-team analysis</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Spain Now Favorite to Win 2026 World Cup, per Polymarket. Over a quarter-billion dollars riding on it. Spain 15%, England 13%, Argentina 11%."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--green)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--green)">M</div>
+          <div>
+            <div class="voice-name">mj.vishal</div>
+            <div class="voice-handle" style="color:var(--accent)">&#128247; @mj.vishal</div>
+            <div class="voice-meta">2,632 engagements &middot; Portugal supporter</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Cristiano Ronaldo has confirmed that the 2026 FIFA World Cup will be his final appearance in the tournament, marking the last opportunity for the 41-year-old to lift the trophy with Portugal."</div>
+      </div>
+    </div>
+
+    <div class="voices-column no">
+      <h3>Skeptics</h3>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">N</div>
+          <div>
+            <div class="voice-name">noauthorityy</div>
+            <div class="voice-handle" style="color:var(--accent)">&#128247; @noauthorityy</div>
+            <div class="voice-meta">351,390 engagements &middot; Germany/Brazil analysis</div>
+          </div>
+        </div>
+        <div class="voice-quote">"Germany has been one of the most successful teams in FIFA World Cup history... but their recent form has been disappointing, exiting in the group stage at both 2018 and 2022."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">4</div>
+          <div>
+            <div class="voice-name">4EverFutballHQ</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @4EverFutballHQ</div>
+            <div class="voice-meta">62 engagements &middot; Brazil skeptic</div>
+          </div>
+        </div>
+        <div class="voice-quote">"BREAKING: Neymar Jr has been left out of Brazil national team for the upcoming games. Carlo Ancelotti has made the decision to leave Neymar Jr OUT again ahead of the WORLD CUP 2026."</div>
+      </div>
+
+      <div class="voice-card" style="border-left:3px solid var(--red)">
+        <div class="voice-top">
+          <div class="voice-avatar" style="background:var(--red)">F</div>
+          <div>
+            <div class="voice-name">FactsDailyDose</div>
+            <div class="voice-handle" style="color:var(--accent)">&#120143; @FactsDailyDose</div>
+            <div class="voice-meta">5 engagements &middot; Iran exit</div>
+          </div>
+        </div>
+        <div class="voice-quote">"IRAN WON'T PLAY IN WORLD CUP: Iran's sports minister confirmed the national team will not participate in the upcoming FIFA World Cup, citing the ongoing conflict."</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Catalysts -->
+  <div class="section-title">Catalysts</div>
+  <div class="catalysts">
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(239,68,68,0.2);color:#ef4444">NEWS</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">Iran confirms withdrawal from 2026 FIFA World Cup citing ongoing conflict; in talks with FIFA to relocate matches to Mexico.</div>
+        <div class="catalyst-meta">Mar 18 &middot; @FactsDailyDose &middot; 41 related posts</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(245,158,11,0.2);color:#f59e0b">POLICY</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">"Save the World Cup Act" introduced by NJ congresswoman -- no federal immigration enforcement within one mile of any match or Fan Festival.</div>
+        <div class="catalyst-meta">Mar 19 &middot; @TheAthleticFC &middot; 68,729 impressions</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(6,182,212,0.2);color:#06b6d4">CULTURE</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">Multiple national team kits unveiled -- USA, Ghana, and others reveal World Cup 2026 jerseys, driving massive fan engagement across platforms.</div>
+        <div class="catalyst-meta">Mar 16-20 &middot; @FOXSoccer &middot; 70 related posts</div>
+      </div>
+    </div>
+
+    <div class="catalyst-card">
+      <span class="catalyst-type" style="background:rgba(34,197,94,0.2);color:#22c55e">MARKET</span>
+      <div class="catalyst-body">
+        <div class="catalyst-desc">FIFA Collect launches RTTs (Right to Tickets) -- digital collectibles granting ticket purchase rights, 21-day scarcity window driving crypto/sports crossover buzz.</div>
+        <div class="catalyst-meta">Mar 18 &middot; @SOLPlayboy &middot; 29 related posts</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Risk/Opportunity -->
+  <div class="risk-callout">
+    <div class="risk-label">Risk / Opportunity Signal</div>
+    <div class="risk-text">The market's top pick Spain (15.4%) is barely discussed on social media (2.5% of mentions), creating the largest negative sentiment gap (-12.9pt) among all contenders. This "silent favorite" pattern means there is no grassroots hype behind Spain's odds -- the signal is driven by sharp bettors, not crowd enthusiasm. Conversely, host nations Mexico (14.5% social, 1.1% market) and USA (11.6% social, 1.6% market) dominate conversation but at noise-level odds, reflecting hosting excitement rather than competitive expectation. Brazil is the only top-6 team with social/market parity (+0.4pt). Key risks: Iran's withdrawal reshuffles the draw, Neymar's exclusion weakens Brazil's depth, and the "Save the World Cup Act" debate could inject political controversy into a sporting event. For bettors, the massive social underrepresentation of Spain may indicate either smart money ahead of the crowd -- or a fragile consensus that could shift quickly.</div>
+  </div>
+
+  <footer>
+    Generated by <a href="https://xpoz.ai" target="_blank">XPOZ</a> &middot; Social Intelligence for Prediction Markets<br>
+    Mar 20, 2026 &middot; <a href="https://polymarket.com/event/2026-fifa-world-cup-winner-595" target="_blank">https://polymarket.com/event/2026-fifa-world-cup-winner-595</a>
+    <div class="disclaimer">This report is for informational purposes only and does not constitute financial advice.</div>
+  </footer>
+
+</div>
+</body>
+</html>

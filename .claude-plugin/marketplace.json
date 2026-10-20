@@ -1,0 +1,19 @@
+{
+  "name": "xpoz-marketplace",
+  "owner": {
+    "name": "XPOZ",
+    "url": "https://xpoz.ai"
+  },
+  "plugins": [
+    {
+      "name": "xpoz-social-intelligence",
+      "description": "Real-time social media analysis from Twitter/X, Reddit, and Instagram - brand sentiment, competition, influencer discovery, and prediction market analysis",
+      "category": "analytics",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/XPOZpublic/xpoz-claude-code-plugins.git"
+      },
+      "homepage": "https://xpoz.ai"
+    }
+  ]
+}
